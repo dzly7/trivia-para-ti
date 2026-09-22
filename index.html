@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cargando...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      width: 100%; height: 100%;
+      background-color: #020005; 
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      touch-action: none;
+    }
+
+    #canvas {
+      width: 100%; height: 100%; display: block;
+    }
+
+    /* === TRIVIA & PANTALLAS PREVIAS (ESTÉTICA ELEGANTE EN TONOS CIAN/LILA MÁGICO) === */
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      /* Fondo azul medianoche / morado oscuro */
+      background: radial-gradient(circle at center, #1a103c 0%, #02000a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      padding: 20px;
+      transition: opacity 0.8s ease;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Diseño de la Trivia (Elegante restaurado) */
+    .trivia-header {
+      color: #e0d4ff; /* Lila clarito */
+      font-family: 'Dancing Script', cursive;
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 0 0 15px rgba(180, 150, 255, 0.8);
+      line-height: 1.1;
+    }
+    .trivia-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(180, 150, 255, 0.3);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(180, 150, 255, 0.1);
+    }
+    #q-text {
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 25px;
+      line-height: 1.3;
+    }
+    .trivia-btn {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(180, 150, 255, 0.5);
+      color: #e0d4ff;
+      padding: 15px;
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .trivia-btn:active, .trivia-btn:hover {
+      background: rgba(180, 150, 255, 0.2);
+      transform: scale(0.98);
+    }
+
+    /* Modal de Error Ofensivo/Gracioso */
+    #error-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .error-content {
+      background: #2b001a;
+      border: 2px solid #ff0055;
+      padding: 40px 30px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(255,0,85,0.4);
+      animation: shake 0.4s ease-in-out;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+    }
+    .error-content p {
+      color: #ffcccc; /* Rojo claro para despegarlo del amarillo */
+      font-family: 'Dancing Script', cursive;
+      font-size: 3rem;
+      margin-bottom: 30px;
+      line-height: 1.1;
+      text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+    }
+    #btn-close-error {
+      background: linear-gradient(135deg, #ff0055, #aa0033);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+
+    /* Pantalla de la Carta (Éxito) - Papel frío/lila */
+    .letter-content {
+      background: #f4f0ff; 
+      background-image: radial-gradient(#d5c2ff 1px, transparent 1px);
+      background-size: 20px 20px;
+      padding: 50px 30px;
+      border-radius: 15px;
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(180, 150, 255, 0.3);
+      position: relative;
+    }
+    .letter-text {
+      font-family: 'Dancing Script', cursive;
+      font-size: 3.5rem;
+      color: #1a103c;
+      margin-bottom: 40px;
+      line-height: 1.2;
+    }
+    .gift-btn {
+      background: linear-gradient(135deg, #7b43ff, #4312b3);
+      border: 2px solid #ffffff;
+      padding: 15px 45px;
+      border-radius: 40px;
+      font-size: 1.4rem;
+      font-weight: 900;
+      cursor: pointer;
+      color: #ffffff;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .gift-btn:active {
+      transform: scale(0.9);
+    }
+
+    /* === UI DE LA GALAXIA === */
+    #top-badge {
+      position: absolute;
+      top: max(40px, env(safe-area-inset-top, 40px));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20, 10, 0, 0.85);
+      border: 2px solid #ffcc00;
+      border-radius: 40px;
+      padding: 10px 35px;
+      color: #ffeba3;
+      font-family: 'Dancing Script', cursive; 
+      font-size: 2rem;
+      text-shadow: 0 0 10px rgba(255, 200, 0, 0.8);
+      white-space: nowrap;
+      box-shadow: 0 0 30px rgba(255, 180, 0, 0.6), inset 0 0 10px rgba(255, 200, 0, 0.3);
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 2s ease;
+      pointer-events: none;
+    }
+
+    .magenta-glow {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: linear-gradient(to top, rgba(255, 0, 127, 0.4), transparent);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    #warp-flash {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      opacity: 0;
+      z-index: 40;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    #yt {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 1px;
+      height: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GALAXIA DE FONDO -->
+  <canvas id="canvas"></canvas>
+  <div class="magenta-glow"></div>
+  <div id="warp-flash"></div>
+  <div id="top-badge">Feliz Día de las Flores Amarillas ✨</div>
+  <div id="yt"></div>
+
+  <!-- 1. PANTALLA DE TRIVIA -->
+  <div id="trivia-screen" class="overlay-screen">
+    <h1 class="trivia-header">Que tan bien me conoces tonta</h1>
+    <div class="trivia-card">
+      <h2 id="q-text">Cargando...</h2>
+      <div id="options-container"></div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ERROR -->
+  <div id="error-modal" class="hidden">
+    <div class="error-content">
+      <p>pinche pndja intenta de nuevo</p>
+      <button id="btn-close-error">Ups, perdón</button>
+    </div>
+  </div>
+
+  <!-- 2. PANTALLA DE LA CARTA -->
+  <div id="letter-screen" class="overlay-screen hidden">
+    <div class="letter-content">
+      <p class="letter-text">felicidades puta espero que te guste</p>
+      <button class="gift-btn" id="btn-open-galaxy">Ver Regalo</button>
+    </div>
+  </div>
+
+  <script>
+    // === LÓGICA DE LA TRIVIA ===
+    const triviaData = [
+      {
+        q: "¿Cuál es mi comida favorita en todo el maldito mundo?",
+        options: ["Tacos al pastor", "Milanesa con spaguetti", "Pizza", "Sushi"],
+        ans: 1
+      },
+      {
+        q: "¿Cuál es esa película que no me canso de ver?",
+        options: ["Shrek 2", "Spider-Man", "Cars 2", "Rápidos y Furiosos"],
+        ans: 2
+      },
+      {
+        q: "¿Qué es lo que más me caga que me hagan?",
+        options: ["Que me ignoren en persona", "Que no respondan rápido", "Que lleguen tarde", "Que me mientan"],
+        ans: 1
+      }
+    ];
+
+    let currentQ = 0;
+    const qText = document.getElementById('q-text');
+    const optionsContainer = document.getElementById('options-container');
+    const triviaScreen = document.getElementById('trivia-screen');
+    const letterScreen = document.getElementById('letter-screen');
+    const errorModal = document.getElementById('error-modal');
+
+    function loadQuestion() {
+      if (currentQ >= triviaData.length) {
+        triviaScreen.classList.add('fade-out');
+        setTimeout(() => {
+          triviaScreen.classList.add('hidden');
+          letterScreen.classList.remove('hidden');
+        }, 800);
+        return;
+      }
+      const data = triviaData[currentQ];
+      qText.innerText = data.q;
+      optionsContainer.innerHTML = '';
+      data.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'trivia-btn';
+        btn.innerText = opt;
+        btn.onclick = () => {
+          if (idx === data.ans) {
+            currentQ++;
+            loadQuestion();
+          } else {
+            errorModal.classList.remove('hidden');
+          }
+        };
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    document.getElementById('btn-close-error').onclick = () => {
+      errorModal.classList.add('hidden');
+    };
+
+    loadQuestion();
+
+
+    // === LÓGICA DE LA GALAXIA 3D ===
+    document.fonts.load('10pt "Dancing Script"').then(() => {});
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { alpha: false }); 
+    let width, height;
+    
+    const imgFlower1 = new Image(); imgFlower1.src = 'flower1.jpg';
+    const imgFlower2 = new Image(); imgFlower2.src = 'flower2.jpg';
+    const imgBouquet = new Image(); imgBouquet.src = 'bouquet.jpg';
+
+    const particles = [];
+    const bgStars = [];
+    const galaxyStars = []; 
+    
+    let fov = 400;
+    let cameraZ = 300;
+    let tilt = 0.45; 
+    let userRotation = 0; 
+    let time = 0;
+    
+    let isDragging = false;
+    let previousX = 0;
+    let previousY = 0;
+    let autoRotationSpeed = 0.0015;
+    
+    let warpPhase = 0; 
+    let warpStartTime = 0;
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    for(let i = 0; i < 300; i++) {
+      bgStars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        s: Math.random() * 1.5,
+        a: Math.random()
+      });
+    }
+
+    for(let i = 0; i < 400; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.pow(Math.random(), 1.5) * 1000; 
+      galaxyStars.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+        s: Math.random() * 2 + 0.5,
+        a: Math.random() * 0.8 + 0.2,
+        blinkSpeed: Math.random() * 0.05 + 0.02
+      });
+    }
+
+    const numParticles = 400; 
+    for(let i = 0; i < numParticles; i++) {
+      const r = Math.pow(Math.random(), 1.6) * 900 + 70; 
+      const armAngle = (i % 6) * (Math.PI * 2 / 6);
+      const angle = armAngle + r * 0.0035 + (Math.random() - 0.5) * 0.4;
+      
+      const x = Math.cos(angle) * r;
+      const z = Math.sin(angle) * r;
+      
+      const ySpread = 120 * Math.exp(-r / 300);
+      let y = (Math.random() - 0.5) * ySpread;
+      if (Math.random() < 0.05) y += (Math.random() - 0.5) * 250;
+      
+      let type = Math.random() > 0.5 ? 'flower1' : 'flower2';
+      if (r > 350 && Math.random() > 0.4) type = 'bouquet';
+      else if (r > 150 && Math.random() > 0.85) type = 'bouquet';
+
+      const size = (type === 'bouquet' ? 70 : 45) + Math.random() * 25; 
+      particles.push({ x, y, z, size, type });
+    }
+
+    function drawCore(sx, sy, scale, timeRef) {
+      const r = 70 * scale;
+      ctx.globalCompositeOperation = 'screen';
+
+      let g1 = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 4);
+      g1.addColorStop(0, 'rgba(255, 240, 150, 1)');
+      g1.addColorStop(0.3, 'rgba(255, 140, 0, 0.4)');
+      g1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = g1;
+      ctx.beginPath(); ctx.arc(sx, sy, r * 4, 0, Math.PI * 2); ctx.fill();
+      
+      for (let j = 0; j < 3; j++) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(timeRef * (j%2===0?1:-1) * (j+1));
+        ctx.beginPath();
+        let points = 20 + j * 10;
+        for (let i = 0; i < points; i++) {
+          let a = (i / points) * Math.PI * 2;
+          let dist = r * (0.6 + Math.abs(Math.sin(i * 3 + timeRef*5)) * 0.4); 
+          ctx.lineTo(Math.cos(a) * dist, Math.sin(a) * dist);
+        }
+        ctx.fillStyle = j === 0 ? '#ffea00' : (j===1 ? '#ff9900' : '#ffddaa');
+        ctx.globalAlpha = 0.6;
+        ctx.fill();
+        ctx.restore();
+      }
+      
+      ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(sx, sy, r * 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      
+      const sinT = Math.abs(Math.sin(tilt)); 
+      const ringRadii = [r * 1.8, r * 2.3, r * 2.9];
+      
+      ringRadii.forEach((rr, i) => {
+        ctx.strokeStyle = `rgba(255, 200, 0, ${0.7 - i*0.15})`;
+        ctx.lineWidth = (3 - i*0.5) * scale;
+        ctx.beginPath(); 
+        ctx.ellipse(sx, sy, rr, rr * sinT, 0, 0, Math.PI * 2); 
+        ctx.stroke();
+      });
+      
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    const phrases = [
+      "Feliz Día de las Flores Amarillas 🌻", "Para ti 💐", "Sonríe siempre 😊", 
+      "Un detallito ✨", "Que tengas un bonito día 💛", "Brilla siempre ☀️", 
+      "Me caes súper bien 💫", "Eres genial 😎", "Para que sonrías hoy 🌻",
+      "Tqm 🎁", "La mejor vibra ✨", "No dejes de brillar 🌟", "Te mereces lo mejor 💛"
+    ];
+    let floatingTexts = [];
+
+    function loop() {
+      let isWarping = (warpPhase === 1);
+      if (isWarping) {
+        let t = (performance.now() - warpStartTime) / 2500; 
+        if (t >= 1) {
+          t = 1;
+          warpPhase = 2; 
+          document.getElementById('warp-flash').style.opacity = '1';
+          setTimeout(() => document.getElementById('warp-flash').style.opacity = '0', 400);
+        }
+        let ease = 1 - Math.pow(1 - t, 4);
+        
+        cameraZ = 4500 - (4500 - 300) * ease;
+        tilt = (Math.PI / 2) - ((Math.PI / 2) - 0.45) * ease;
+        userRotation += 0.02 * (1 - ease); 
+      }
+
+      ctx.fillStyle = '#020005';
+      ctx.fillRect(0, 0, width, height);
+      
+      ctx.fillStyle = '#ffffff';
+      const cx = width / 2;
+      const cy = height / 2 + 50; 
+
+      bgStars.forEach(star => {
+        if(isWarping) {
+          const dx = star.x - cx;
+          const dy = star.y - cy;
+          star.x += dx * 0.05;
+          star.y += dy * 0.05;
+          
+          if (star.x < 0 || star.x > width || star.y < 0 || star.y > height) {
+            star.x = cx + (Math.random()-0.5)*100;
+            star.y = cy + (Math.random()-0.5)*100;
+          }
+          
+          ctx.beginPath();
+          ctx.moveTo(star.x, star.y);
+          ctx.lineTo(star.x - dx*0.1, star.y - dy*0.1);
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        } else {
+          star.a += (Math.random() - 0.5) * 0.1;
+          star.a = Math.max(0.1, Math.min(1, star.a));
+          ctx.globalAlpha = star.a;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+      ctx.globalAlpha = 1;
+      
+      if (warpPhase > 0) {
+        time += autoRotationSpeed;
+        const totalRotation = time + userRotation;
+        
+        const sinT = Math.sin(tilt);
+        const cosT = Math.cos(tilt);
+        const sinR = Math.sin(totalRotation);
+        const cosR = Math.cos(totalRotation);
+
+        ctx.globalCompositeOperation = 'screen';
+        
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(1, Math.abs(sinT) || 0.01);
+        
+        let auraGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 1100);
+        auraGrad.addColorStop(0, 'rgba(255, 220, 50, 0.4)');
+        auraGrad.addColorStop(0.2, 'rgba(255, 140, 0, 0.15)');
+        auraGrad.addColorStop(0.5, 'rgba(150, 50, 0, 0.03)');
+        auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = auraGrad;
+        ctx.fillRect(-1100, -1100, 2200, 2200);
+
+        ctx.rotate(totalRotation); 
+        ctx.fillStyle = '#ffeba3';
+        galaxyStars.forEach(gs => {
+          const currentAlpha = Math.abs(Math.sin(time * 5 + gs.blinkSpeed * 100)) * gs.a;
+          ctx.globalAlpha = currentAlpha;
+          ctx.beginPath();
+          ctx.arc(gs.x, gs.y, gs.s, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+        
+        ctx.globalCompositeOperation = 'source-over';
+
+        const projected = [];
+        
+        for(let p of particles) {
+          const rx = p.x * cosR - p.z * sinR;
+          const rz = p.x * sinR + p.z * cosR;
+          
+          const ty = p.y * cosT - rz * sinT;
+          const tz = p.y * sinT + rz * cosT;
+          
+          const scale = fov / (fov + tz + cameraZ);
+          
+          projected.push({
+            particleRef: p,
+            sx: cx + rx * scale,
+            sy: cy + ty * scale,
+            scale: scale,
+            tz: tz,
+            size: p.size,
+            type: p.type
+          });
+        }
+        
+        projected.push({
+          isCore: true,
+          tz: 0,
+          sx: cx,
+          sy: cy,
+          scale: fov / (fov + 0 + cameraZ)
+        });
+        
+        projected.sort((a, b) => b.tz - a.tz);
+        
+        for(let p of projected) {
+          if (p.tz < -cameraZ + 50) continue; 
+          
+          if (p.isCore) {
+            drawCore(p.sx, p.sy, p.scale, time);
+          } else {
+            ctx.globalCompositeOperation = 'screen';
+            
+            const depthAlpha = Math.max(0.1, Math.min(1, 1 - (p.tz / 1000)));
+            ctx.globalAlpha = depthAlpha;
+            
+            const drawSize = p.size * p.scale;
+            let img = imgFlower1;
+            if (p.type === 'flower2') img = imgFlower2;
+            else if (p.type === 'bouquet') img = imgBouquet;
+
+            if (img.complete && img.naturalHeight !== 0) {
+              ctx.drawImage(img, p.sx - drawSize/2, p.sy - drawSize/2, drawSize, drawSize);
+            }
+            
+            p.particleRef.sx = p.sx;
+            p.particleRef.sy = p.sy;
+            p.particleRef.tz = p.tz;
+            
+            ctx.globalCompositeOperation = 'source-over';
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // --- TEXTOS FLOTANTES ---
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+          let txt = floatingTexts[i];
+          
+          txt.y -= 2; 
+          txt.x = txt.baseX + Math.sin(time * 8 + txt.life * 5) * 20;
+          txt.life -= 0.012;
+          
+          let progress = 1 - (txt.life / txt.maxLife);
+          let textScale = Math.min(1, progress * 4); 
+          
+          let alpha = Math.max(0, txt.life);
+          ctx.globalAlpha = alpha;
+          
+          ctx.font = `700 ${2.5 * textScale}rem 'Dancing Script', cursive`;
+          ctx.textAlign = "center";
+          
+          ctx.lineJoin = "round";
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = "rgba(0,0,0,0.85)";
+          ctx.strokeText(txt.text, txt.x, txt.y);
+          
+          ctx.shadowColor = txt.color;
+          ctx.shadowBlur = 15;
+          
+          ctx.fillStyle = txt.color;
+          ctx.fillText(txt.text, txt.x, txt.y);
+          
+          ctx.shadowBlur = 0;
+          
+          if (txt.life <= 0) floatingTexts.splice(i, 1);
+        }
+        ctx.globalAlpha = 1;
+      }
+      
+      requestAnimationFrame(loop);
+    }
+
+    requestAnimationFrame(loop);
+
+    function handlePointerDown(x, y) {
+      if (warpPhase < 2) return; 
+      isDragging = true;
+      previousX = x;
+      previousY = y;
+      autoRotationSpeed = 0;
+      
+      for (let p of particles) {
+        if (p.tz && p.tz > -cameraZ && p.sx && p.sy) {
+          const dx = p.sx - x;
+          const dy = p.sy - y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 40) { 
+            const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+            const colors = ["#ffeba3", "#ffcc00", "#ffffff", "#ffaa00"];
+            floatingTexts.push({
+              text: phrase,
+              x: p.sx,
+              baseX: p.sx,
+              y: p.sy - 20,
+              life: 1.5,
+              maxLife: 1.5,
+              color: colors[Math.floor(Math.random() * colors.length)]
+            });
+            break; 
+          }
+        }
+      }
+    }
+    
+    function handlePointerMove(x, y) {
+      if(isDragging && warpPhase === 2) {
+        const deltaX = x - previousX;
+        const deltaY = y - previousY;
+        
+        userRotation += deltaX * 0.005; 
+        tilt -= deltaY * 0.005;         
+        
+        tilt = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, tilt));
+        
+        previousX = x;
+        previousY = y;
+      }
+    }
+
+    canvas.addEventListener('mousedown', e => handlePointerDown(e.clientX, e.clientY));
+    canvas.addEventListener('mousemove', e => handlePointerMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', () => { isDragging = false; autoRotationSpeed = 0.0015; });
+    
+    canvas.addEventListener('touchstart', e => handlePointerDown(e.touches[0].clientX, e.touches[0].clientY));
+    canvas.addEventListener('touchmove', e => handlePointerMove(e.touches[0].clientX, e.touches[0].clientY));
+    window.addEventListener('touchend', () => { isDragging = false; autoRotationSpeed = 0.0015; });
+
+    const bgAudio = new Audio('audio.mp3');
+    bgAudio.loop = true;
+
+    document.getElementById('btn-open-galaxy').addEventListener('click', () => {
+      document.getElementById('letter-screen').classList.add('fade-out');
+      
+      setTimeout(() => {
+        document.getElementById('letter-screen').classList.add('hidden');
+        document.getElementById('top-badge').style.opacity = '1';
+
+        warpPhase = 1;
+        warpStartTime = performance.now();
+        cameraZ = 4500;
+        tilt = Math.PI / 2; 
+
+        bgAudio.play().catch(e => console.log(e));
+      }, 500); 
+    });
+  </script>
+</body>
+</html>
