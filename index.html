@@ -172,19 +172,22 @@
     /* === UI DE LA GALAXIA === */
     #top-badge {
       position: absolute;
-      top: 50px; /* Fallback seguro para móvil */
-      top: max(50px, env(safe-area-inset-top, 50px));
+      top: 60px;
+      top: max(60px, env(safe-area-inset-top, 60px));
       left: 50%;
       transform: translateX(-50%);
+      width: 90%;
+      max-width: 450px;
       background: rgba(20, 10, 0, 0.85);
       border: 2px solid #ffcc00;
       border-radius: 40px;
-      padding: 10px 35px;
+      padding: 10px 20px;
       color: #ffeba3;
       font-family: 'Dancing Script', cursive; 
-      font-size: 2rem;
+      font-size: clamp(1.3rem, 6vw, 2.2rem);
+      text-align: center;
+      line-height: 1.2;
       text-shadow: 0 0 10px rgba(255, 200, 0, 0.8);
-      white-space: nowrap;
       box-shadow: 0 0 30px rgba(255, 180, 0, 0.6), inset 0 0 10px rgba(255, 200, 0, 0.3);
       z-index: 10;
       opacity: 0;
