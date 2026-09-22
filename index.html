@@ -482,6 +482,11 @@
     let floatingTexts = [];
 
     function loop() {
+      let isMobile = width < 600;
+      let finalCameraZ = isMobile ? 650 : 300; // Más lejos en móvil para que quepa en pantalla
+      let baseFontSize = isMobile ? 1.6 : 2.5; // Texto más pequeño en móvil
+      let flowerScale = isMobile ? 0.6 : 1;    // Flores más pequeñas en móvil
+
       let isWarping = (warpPhase === 1);
       if (isWarping) {
         let t = (performance.now() - warpStartTime) / 2500; 
@@ -493,7 +498,7 @@
         }
         let ease = 1 - Math.pow(1 - t, 4);
         
-        cameraZ = 4500 - (4500 - 300) * ease;
+        cameraZ = 4500 - (4500 - finalCameraZ) * ease;
         tilt = (Math.PI / 2) - ((Math.PI / 2) - 0.45) * ease;
         userRotation += 0.02 * (1 - ease); 
       }
@@ -503,7 +508,7 @@
       
       ctx.fillStyle = '#ffffff';
       const cx = width / 2;
-      const cy = height / 2 + 50; 
+      const cy = height / 2 + (isMobile ? 0 : 50); // Centrar mejor en móvil
 
       bgStars.forEach(star => {
         if(isWarping) {
@@ -563,7 +568,7 @@
           const currentAlpha = Math.abs(Math.sin(time * 5 + gs.blinkSpeed * 100)) * gs.a;
           ctx.globalAlpha = currentAlpha;
           ctx.beginPath();
-          ctx.arc(gs.x, gs.y, gs.s, 0, Math.PI * 2);
+          ctx.arc(gs.x, gs.y, gs.s * flowerScale, 0, Math.PI * 2); // Estrellas más pequeñas
           ctx.fill();
         });
         ctx.restore();
@@ -587,7 +592,7 @@
             sy: cy + ty * scale,
             scale: scale,
             tz: tz,
-            size: p.size,
+            size: p.size * flowerScale, // Escalar flores en móvil
             type: p.type
           });
         }
@@ -597,7 +602,7 @@
           tz: 0,
           sx: cx,
           sy: cy,
-          scale: fov / (fov + 0 + cameraZ)
+          scale: (fov / (fov + 0 + cameraZ)) * flowerScale
         });
         
         projected.sort((a, b) => b.tz - a.tz);
@@ -645,7 +650,7 @@
           let alpha = Math.max(0, txt.life);
           ctx.globalAlpha = alpha;
           
-          ctx.font = `700 ${2.5 * textScale}rem 'Dancing Script', cursive`;
+          ctx.font = `700 ${baseFontSize * textScale}rem 'Dancing Script', cursive`;
           ctx.textAlign = "center";
           
           ctx.lineJoin = "round";
