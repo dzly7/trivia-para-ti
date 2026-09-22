@@ -172,7 +172,8 @@
     /* === UI DE LA GALAXIA === */
     #top-badge {
       position: absolute;
-      top: max(40px, env(safe-area-inset-top, 40px));
+      top: 50px; /* Fallback seguro para móvil */
+      top: max(50px, env(safe-area-inset-top, 50px));
       left: 50%;
       transform: translateX(-50%);
       background: rgba(20, 10, 0, 0.85);
@@ -342,8 +343,10 @@
     loadQuestion();
 
 
-    // === LÓGICA DE LA GALAXIA 3D ===
-    document.fonts.load('10pt "Dancing Script"').then(() => {});
+    // Precargar fuente de forma segura para móviles
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('10pt "Dancing Script"').catch(e => console.log(e));
+    }
 
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d', { alpha: false }); 
